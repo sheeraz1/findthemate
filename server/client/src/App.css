@@ -1,0 +1,52 @@
+.formdiv {
+  margin-bottom: 20px;
+}
+
+
+.map-item{
+  margin-bottom: 10px;
+  margin-right: 40px;
+  padding: 20px;
+  font-size: 20px;
+  color: white;
+  text-align: center;
+}
+
+.solved-puzzle-item{
+  background-color: gray;
+  
+}
+
+
+.unsolved-puzzle-item{
+  background-color: green;
+  
+}
+
+
+.info-button{
+  display: block;
+  border-radius:0px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  background-color:#784922;
+  text-align: left;
+  width: 160px;
+}
+
+.header{
+  background-color: red;
+}
+
+.navbarheader{
+  background-color :#784922;
+  }
+
+.textsize{
+  font-size: 15;
+  color : white;
+}
+
+.navitem{
+  margin-left: 20px
+}
