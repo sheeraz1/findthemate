@@ -1,10 +1,16 @@
 import React from 'react';
-import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
+import { Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import axios from 'axios';
-export default class RegisterForm extends React.Component {
+import {connect} from 'react-redux';
+import {FETCH_USER} from '../actions/types';
+import {Redirect} from 'react-router';
+
+class RegisterForm extends React.Component {
     state={
-        email: "",
-        password: ""
+        email: '',
+        password: '',
+        isloggedIn: false,
+        error : '',
     }
 
     onPasswordChange = (e) => {
@@ -21,15 +27,31 @@ export default class RegisterForm extends React.Component {
 
     formSubmit = () =>{
         axios.post( "/api/register", {
-            email: this.state.email,
-            password: this.state.password,
-          }).then(function(data){
-            console.log(data);
-          });
+          email: this.state.email,
+          password: this.state.password,
+        
+      }).then(
+          (response) => {
+              if (response.status === 200 && response.data.user){
+                  this.props.setUser(response.data.user);
+                  this.setState({
+                      isloggedIn : true,
+                      error: '',
+                  })
+              }
+              else{
+                  this.setState({
+                      error : 'error registering',
+                      isloggedIn : false,
+                  })
+              }
+
+          }
+      )
     }
 
   render() {
-    return (
+    return( this.state.isloggedIn ? <Redirect to="/"/> :
       <Form>
         <FormGroup>
           <Label for="exampleEmail">Email</Label>
@@ -37,14 +59,26 @@ export default class RegisterForm extends React.Component {
         </FormGroup>
         <FormGroup>
           <Label for="examplePassword">Password</Label>
-          <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword" placeholder="Please Enter a Password" />
+          <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword1" placeholder="Please Enter a Password" />
         </FormGroup>
         <FormGroup>
           <Label for="examplePassword">Password</Label>
-          <Input type="password" name="password" id="examplePassword" placeholder="Please Repeat The Password" />
+          <Input type="password" name="password" id="examplePassword2" placeholder="Please Repeat The Password" />
         </FormGroup>
         <Button onClick={this.formSubmit}>Submit</Button>
       </Form>
     );
   }
 }
+
+
+
+function mapDispatchToRegisterFormProps(dispatch){
+  return {
+      setUser : (user) =>{
+          dispatch({ type: FETCH_USER, payload: user })
+      }
+  }
+}
+
+export default connect(null, mapDispatchToRegisterFormProps)(RegisterForm);

@@ -1,25 +1,29 @@
-import {FETCH_USER, SOLVED_PUZZLE} from '../actions/types';
-
-var user = {
-    "_id": {
-        "$oid": "5adec9dcc63630317067d9ff"
-    },
-    "email": "gfdfgfd@yahoo.com",
-    "password": "imation",
-	"__v": 0, 
-	"solved": {}
-}
+import {FETCH_USER, SOLVED_PUZZLE, DELETE_USER, SET_CURRENT_PUZZLE} from '../actions/types';
 
 export default function(state=null, action){
 	switch (action.type){
 		case FETCH_USER:
-			return user;
+			return action.payload || false;
+		case DELETE_USER:
+			return null;
 		case SOLVED_PUZZLE:
 		{
-			console.log('' + action.id + 'is solved');
 			var newState = Object.assign({}, state);
-			(newState['solved'])[action.id] = true;
+			if (newState['solved'])
+				(newState['solved']).push(action.id);
 			return newState;
+		}
+		case SET_CURRENT_PUZZLE:
+		{
+			var state2 = Object.assign({}, state);
+			console.log('new state in currentpuzzle is');
+			console.log(newState);
+			state2.currentPuzzle = {
+                id : action.id,
+                fen : action.fen,
+                solutions : action.solutions
+			};
+			return state2;
 		}
 		default: 
 			return state;

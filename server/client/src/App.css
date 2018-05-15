@@ -5,11 +5,31 @@
 
 .map-item{
   margin-bottom: 10px;
-  margin-right: 40px;
-  padding: 20px;
-  font-size: 20px;
-  color: white;
+  margin-right: 10px;
+  margin-left: 10px;
+  padding: 10px;
+  font-size: 18px;
+  color: white !important;
   text-align: center;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  height: 50px;
+  flex-basis:0;
+  border: 1px solid gray;
+}
+
+.map-item:hover{
+  background-color: red;
+}
+
+.map-item a{
+  color: white;
+}
+
+.map-item a:hover{
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .solved-puzzle-item{
@@ -19,19 +39,19 @@
 
 
 .unsolved-puzzle-item{
-  background-color: green;
+  background-color: lightgreen;
   
 }
 
 
 .info-button{
-  display: block;
   border-radius:0px;
-  margin-bottom: 20px;
-  margin-left: 20px;
-  background-color:#784922;
+  margin-top: 20px;
+  background-color:lightcoral;
   text-align: left;
-  width: 160px;
+  width: 150px;
+  font-size:12px;
+
 }
 
 .header{
@@ -39,7 +59,7 @@
 }
 
 .navbarheader{
-  background-color :#784922;
+  background-color :lightcoral;
   }
 
 .textsize{
@@ -49,4 +69,89 @@
 
 .navitem{
   margin-left: 20px
+}
+
+
+.row-container{
+  margin: auto;
+}
+
+
+.row .puzzle-button{
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.formdiv{
+  margin-top: 20px;
+}
+
+
+.regis-text{
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+.form-label{
+  font-weight: 600;
+}
+
+
+.form-button{
+  background-color: lightcoral;
+}
+
+.buttons-container{
+  max-width: 150px;
+}
+
+
+
+.cg-board-wrap svg{
+  max-width: 240px;
+}
+
+.meow{
+  max-width: 240px;
+}
+
+
+.board.col-sm-2{
+  padding-left: 0;
+}
+
+
+.hide{
+  display:none;
+}
+
+.direction{
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 15px;
+  color: lightcoral;
+}
+
+.fen{
+  text-align: left;
+}
+
+
+.row .fen{
+  position: absolute;
+  bottom: 5px;
+  left :160px;
+  color: lightcoral;
+}
+
+.fenRow{
+  position: relative;
+}
+
+.buttons-container.row{
+  margin-left:0;
+}
+
+.tick{
+  margin-top: 7px;
 }

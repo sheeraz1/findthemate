@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 const keys = require('./config/keys');
 const authRoutes = require('./routes/authroutes');
 const cookieSession = require('cookie-session');
-
 const bodyParser = require('body-parser');
+
 require('./models/User');
 require('./models/Puzzle')
 require('./services/passport');
@@ -21,8 +21,8 @@ app.use(cookieSession({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+const path = require('path');
 authRoutes(app);
 
-
-  
 app.listen(5000);

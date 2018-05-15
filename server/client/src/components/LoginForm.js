@@ -1,12 +1,17 @@
 import React from 'react';
-import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
+import { Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
+import {connect} from 'react-redux';
+import {FETCH_USER} from '../actions/types';
+import {Redirect} from 'react-router';
+import {Col} from 'reactstrap';
 
-export default class LoginForm extends React.Component {
+ class LoginForm extends React.Component {
     state={
         email: "",
-        password: ""
+        password: "",
+        error: "",
     }
 
     onPasswordChange = (e) => {
@@ -25,32 +30,71 @@ export default class LoginForm extends React.Component {
         axios.post( "/api/login", {
             email: this.state.email,
             password: this.state.password,
-          }).then(function(data){
-            console.log(data);
-          });
+          
+        }).then(
+            (response) => {
+                if (response.status === 200 && response.data.user){
+                    this.props.setUser(response.data.user);
+                    this.setState({
+                        isloggedIn : true,
+                        error: '',
+                        user : '',
+                        email : '',
+                    })
+                }
+                else{
+                    this.setState({
+                        error : 'error logging in',
+                        isloggedIn : false,
+                    })
+                }
+
+            }
+        )
     }
+
   render() {
-      console.log(this.state);
-    return (
-      <div>
+    return( this.state.isloggedIn ? <Redirect to="/"/> :
+     
+      <Col sm={{size:6, offset:3}}>
         <div className="formdiv">
-            <Form>
+            <Form className="login-form">
                 <FormGroup>
-                <Label for="exampleEmail">Email</Label>
-                <Input onChange = {this.onEmailChange} type="email" name="email" id="exampleEmail" placeholder="with a placeholder" ref="email" />
+                <Label className="form-label" for="exampleEmail">Email</Label>
+                <Input onChange = {this.onEmailChange} type="email" name="email" id="exampleEmail" placeholder="Enter a valid email" ref="email" />
                 </FormGroup>
                 <FormGroup>
-                <Label for="examplePassword">Password</Label>
-                <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword" placeholder="password placeholder" ref="password" />
+                <Label className="form-label" for="examplePassword">Password</Label>
+                <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword" placeholder="Enter password" ref="password" />
                 </FormGroup>
-                <Button onClick = {this.onClick} >Submit</Button>
+                <Button className="form-button"onClick = {this.formSubmit} block >Submit</Button>
+                <div className="regis-text">New User ? Register here:</div>
+                <Button className="form-button" block tag={Link} to="/register"> 
+                    Register
+                </Button>
             </Form>
         </div>
-        <Button tag={Link} to="/register"> 
-            Register
-        </Button>
-    </div>
+        
+    </Col>
 
     );
   }
 }
+
+
+function mapDispatchToLoginFormProps(dispatch){
+    return {
+        fetchUser : () =>{
+            axios.get('/api/current_user').then(
+				function(res){
+					dispatch({ type: FETCH_USER, payload: res.data });
+				}
+			)
+        },
+        setUser : (user) =>{
+            dispatch({ type: FETCH_USER, payload: user })
+        }
+    }
+}
+
+export default connect(null, mapDispatchToLoginFormProps)(LoginForm);

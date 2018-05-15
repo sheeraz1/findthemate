@@ -1,24 +1,104 @@
 const passport = require('passport');
 const mongoose = require('mongoose');
+
 module.exports = (app) => {
 	app.get(
 		'/api/current_user', (req, res)=>{
 		res.send(req.user);
 	});
 
-	app.post('/api/login', function(req,res) {
-		passport.authenticate('local-login', {
-			successRedirect : '/', // redirect to the secure profile section
-			failureRedirect : '/login', // redirect back to the signup page if there is an error
-			failureFlash : true // allow flash messages
-		}
-	)});
+	app.post('/api/login', (req,res,next) =>{
+		return passport.authenticate('local-login', (err, user) => {
+			if (err) {
+			  if (err.name === 'IncorrectCredentialsError') {
+				return res.status(400).json({
+				  success: false,
+				  message: err.message
+				});
+			  }
+		
+			  return res.status(400).json({
+				success: false,
+				message: 'Could not process the form.'
+			  });
+			}
+		
+			req.login(user, function(err) {
+				if (err) { return next(err); }
+			});
 
-	app.post('/api/register', passport.authenticate('local-signup', {
-		successRedirect : '/profile', // redirect to the secure profile section
-		failureRedirect : '/signup', // redirect back to the signup page if there is an error
-		failureFlash : true // allow flash messages
-	}));
+			return res.json({
+			  success: true,
+			  message: 'You have successfully logged in!',
+			  user: user
+			});
+		  })(req, res, next);
+		}
+	);
+
+	app.post(
+		'/api/solved', (req, res)=>{
+			const User = mongoose.model('users');
+			User.findOne({ _id :  req.body.userid }, function(err, user) {
+				// if there are any errors, return the error
+				if (err)
+					return;
+	
+				// if no user is found, return the message
+				var id = req.body.puzzleid;
+				if (!user)
+					return;
+				if (user.solved)
+					user.solved.push(id);
+				else user.solved=[id];
+				user.save(function(err){
+				});
+	
+				// all is well, return user
+			});
+	});
+
+
+	app.post(
+		'/api/current_puzzle', (req, res)=>{
+			const User = mongoose.model('users');
+			User.findOne({ _id :  req.body.userid }, function(err, user) {
+				// if there are any errors, return the error
+				if (err)
+					return;
+	
+				// if no user is found, return the message
+				var id = req.body.puzzleid;
+				user.currentPuzzle = {
+					id : id,
+					fen : req.body.fen,
+					solutions : req.body.solutions
+				}
+				user.save(function(err){
+				});
+	
+				// all is well, return user
+			});
+	});
+
+	app.post('/api/register', (req,res,next) =>{
+		return passport.authenticate('local-signup', (err, user) => {
+			if (err) {
+	
+			  return res.status(400).json({
+				success: false,
+				message: 'Registration is unavailable. Please try again later'
+			  });
+			}
+		
+			return res.json({
+			  success: true,
+			  message: 'You have successfully registered',
+			  user: user
+			});
+		  })(req, res, next);
+		}
+	);
 
 	app.get(
 		'/api/puzzles', (req, res)=>{
@@ -27,6 +107,11 @@ module.exports = (app) => {
 			res.send(docs);
 		});
 	});
+
+
+
+	app.get('/api/logout', (req, res) => {
+		req.logout();
+		res.redirect('/');
+	  });
 };
-
-

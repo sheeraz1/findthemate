@@ -1,3 +1,5 @@
+var Chess = require('chess.js');
+
 class GameTree {
     constructor(){
 
@@ -27,9 +29,13 @@ class GameTree {
 
     }
 
-    isCorrectMove(move){
+    isCorrectMove(from,to, fen){
+        var chess = new Chess();
+        chess.load(fen);
+        if (chess.move({ from, to, promotion: 'q' }) != null && chess.in_checkmate())
+            return 1;
         for(var i=0; i<this.currentNode.children.length;i++){
-            if (this.currentNode.children[i].move === move){
+            if (this.currentNode.children[i].move === from+to){
                 return i;
             }
         }

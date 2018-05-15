@@ -1,25 +1,48 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
 import {connect} from 'react-redux';
+import axios from 'axios';
+import {FETCH_USER} from '../actions/types';
 import {
-    Collapse,
     Navbar,
-    NavbarToggler,
-    NavbarBrand,
     Nav,
-    NavItem,
-    NavLink,
-    UncontrolledDropdown,
-    DropdownToggle,
-    DropdownMenu,
-    DropdownItem } from 'reactstrap';
+    NavItem
+ } from 'reactstrap';
 
 class Header extends Component{
+    constructor(props){
+        super(props);
+        this.logout = this.logout.bind(this);
+        this.state={};
+        if (props.user){
+            this.state.user = props.user;
+        }
+    }
+    logout = () => {
+        this.setState({
+            user:null,
+        })
+        var fetchUser = this.props.fetchUser;
+        axios.get('/api/logout').then((response) =>{
+            fetchUser();
+        }
+        )
+        
+    }
+
+    componentWillReceiveProps(props){
+        this.setState({
+            user : props.user,
+        });
+    }
     render(){
         return this.renderContent();
      }; 
+
+    componentWillMount(){
+    }
     renderContent = () => {
-        if (this.props.email){
+        if (this.state.user){
             return (
                 <div>
                     <Navbar className="navbarheader" expand="md">
@@ -30,13 +53,10 @@ class Header extends Component{
                     </Nav>
                     <Nav className="ml-auto">
                     <NavItem className="navitem">
-                        <Link className = "textsize " to="/settings">Settings</Link>
-                    </NavItem>
-                    <NavItem className="navitem">
                         <Link className = "textsize" to="/map">Map</Link>
                     </NavItem>
                     <NavItem  className="navitem">
-                        <Link className = "textsize" to="/logout">Log Out</Link>
+                        <Link className = "textsize" to="/" onClick={()=>{this.logout()}}>Log Out</Link>
                     </NavItem>
                 
                     </Nav>
@@ -47,13 +67,18 @@ class Header extends Component{
         }
         else return (
             <div>
-                <Navbar className = "navbarheader"  light expand="md">
-                <NavbarBrand href="/">Find The Mate</NavbarBrand>
-                    <Nav className="ml-auto">
-                    <NavItem>
-                        <Link to="/login">Log In</Link>
-                    </NavItem>
-                    </Nav>
+                <Navbar className="navbarheader" expand="md">
+                <Nav className="mr-auto">
+                <NavItem className="navitem textsize">
+                    Find The Mate
+                </NavItem>
+                </Nav>
+                <Nav className="ml-auto">
+                <NavItem className="navitem">
+                    <Link className = "textsize " to="/login">Log In</Link>
+                </NavItem>
+                
+                </Nav>
                 </Navbar>
             </div>
         );
@@ -65,9 +90,21 @@ class Header extends Component{
 
 function mapStateToHeaderProps(state){
     return {
-        email : state.user ? state.user.email : state.user,
+        user : state.user ? state.user : null,
     }
 
-
 };
-export default connect(mapStateToHeaderProps, null)(Header);
+
+function mapDispatchToHeaderProps(dispatch){
+    return {
+        fetchUser : () =>{
+            axios.get('/api/current_user').then(
+				function(res){
+					dispatch({ type: FETCH_USER, payload: res.data });
+				}
+			)
+        }
+    }
+}
+
+export default connect(mapStateToHeaderProps, mapDispatchToHeaderProps)(Header);

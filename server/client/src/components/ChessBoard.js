@@ -1,75 +1,161 @@
-import React, { Component } from 'react';
-import {Button, Row, Container} from 'reactstrap';
-import ChessDiagram from 'react-chessground';
-import {connect} from 'react-redux';
+
+import {SOLVED_PUZZLE, SET_CURRENT_PUZZLE} from '../actions/types';
+import axios from 'axios';
+
+/*assets/css*/
 import '../App.css';
 import '../chessground.css';
 import 'react-chessground/dist/styles/chessground.css'
-import {SOLVED_PUZZLE, SET_CURRENT_PUZZLE} from '../actions/types';
+import tickIcon from '../baseline-done-24px.svg';
 
+/*components*/
+import React, { Component } from 'react';
+import {Button, Container,Row,Col} from 'reactstrap';
+import ChessDiagram from 'react-chessground';
+import {connect} from 'react-redux';
+import {Link} from 'react-router-dom';
 var GameTree = require('./GameTree')
 var Chess = require('chess.js');
 
+/*reducer*/
+
+
 class ChessBoard extends Component {
     constructor(props){
-        console.log('constructor called');
         super(props);
-        this.state = {
-            fen : '//',
-        }
+        this.whiteInitial = "White To Move";
+        this.blackInitial = "Black To Move";
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        var minWidthHeight = (width < height) ? width : height;
+        var boardDim = window.innerHeight < window.innerWidth ? window.innerHeight * 0.7 : window.innerWidth * 0.7;
+        
+        this.setState({
+            boardDim : (minWidthHeight * .7),
+        });
+
         this.chess = new Chess();
         this.solutionsTree = new GameTree();
-        if(props.puzzle){
-            this.chess.load(props.puzzle.fen);
-            this.state.fen = props.puzzle.fen;
-            this.state.id = props.puzzle.id;
-            this.state.solutions = props.puzzle.solutions;
-            this.solutionsTree.createSolutionsTree(props.puzzle.solutions);
+        var whiteMove = true;
+        if(props.user){
+            var currentPuzzle = props.user.currentPuzzle;
+            if(props.puzzles){
+                for(var i=0; i<props.puzzles.length; i++){
+                    if ((props.puzzles[i])._id === currentPuzzle.id){
+                        this.currentPuzzleIndex = i;
+                        break;
+                    }
+                }
+            }
+            this.chess.load(currentPuzzle.fen);
+            if (this.chess.turn() === 'b'){
+                
+                whiteMove = false;
+            }
+            this.solutionsTree.createSolutionsTree(currentPuzzle.solutions);
+        }
+        
+
+        this.state = {
+            no_move_made:true,
+            fen : currentPuzzle ? currentPuzzle.fen : "//",
+            white : whiteMove,
+            finished_game : false,
+            viewOnly:false,
+            currentPuzzle: currentPuzzle,
+            showFen: false,
         }
         
         this.onMove = this.onMove.bind(this);
         this.makeComputerMove = this.makeComputerMove.bind(this);
-        this.finished_game = false;
+        this.setNexPuzzle=this.setNexPuzzle.bind(this);
     }
 
     componentWillReceiveProps(props){
-        
+        if (props.user){
+            if (props.user.currentPuzzle){
+                
+                if (props.user.currentPuzzle !== this.state.currentPuzzle){
+                    
+                    this.solutionsTree = new GameTree();
+                    this.solutionsTree.createSolutionsTree(props.user.currentPuzzle.solutions);
+                    this.chess.load(props.user.currentPuzzle.fen);
+                    var white = true;
+                    if (this.chess.turn() === 'b'){
+                        white = false;
+                    }
+                    this.setState({
+                        white : white,
+                        currentPuzzle : props.user.currentPuzzle,
+                        fen:props.user.currentPuzzle.fen
+
+                    })
+                }
+            }
+        }
+        else {
+            this.setState({
+                'fen': '//'
+            })
+        }
      }
 
    
     onMove = (from, to) => {
         const oldfen = this.state.fen;
-        var i = this.solutionsTree.isCorrectMove(from+to);
-        console.log(i);
-        if (i != -1){
+        var i = this.solutionsTree.isCorrectMove(from,to,this.state.fen);
+        if (i !== -1){
             this.solutionsTree.goForward(i);
             this.chess.move({ from, to, promotion: 'q' });
             this.setState({
                 fen: this.chess.fen(),
+                no_move_made:false
             });
             if (!this.chess.in_checkmate())
-                setTimeout(this.makeComputerMove,1000);
+                setTimeout(this.makeComputerMove,300);
             else{
-                console.log('checkmate');
-                console.log(this.props.puzzle);
-                this.props.solved_puzzle(this.props.puzzle.id);
-                for(var i=0; i<this.props.puzzles.length; i++){
-                    var puzzle = this.props.puzzles[i];
-                    if (!this.props.user.solved[puzzle._id]){
-                        this.props.setPuzzle(puzzle._id,puzzle.fen, puzzle.solutions);
-                        break;
-                    }
-                }
+                this.setState({
+                    finished_game:true,
+                    viewOnly:true
+
+                })
+                if (this.props.user.solved.indexOf(this.props.user.currentPuzzle.id) < 0)
+                    this.props.solved_puzzle(this.props.user._id, this.props.user.currentPuzzle.id);
+               
             }
 
         }
-        else {
-            setTimeout(this.setState({
-                fen: oldfen,
-            }),500);
+        else{
+            var chess = new Chess();
+            chess.load(oldfen);
+
+            if (chess.move({ from, to, promotion: 'q' }) && chess.in_checkmate()){
+                this.setState({
+                    fen : chess.fen(),
+                    finished_game: true,
+                    viewOnly:true
+
+                })
+            }
+                
+            else {
+                setTimeout(this.setState({
+                    fen: oldfen,
+                }),500);
+            }
         }
-      }
+    }
     
+    setNexPuzzle(){
+        if(this.currentPuzzleIndex >=499)
+            this.currentPuzzleIndex=0;
+        else 
+            this.currentPuzzleIndex=this.currentPuzzleIndex+1;
+
+        var puzzle = this.props.puzzles[this.currentPuzzleIndex];
+        var id=this.props.user._id;
+        this.props.setPuzzle(id,puzzle._id,puzzle.fen, puzzle.solutions)
+    }
     makeComputerMove(){
         const move = this.solutionsTree.currentNode.children[0].move;
         const from = move.substring(0,2);
@@ -84,23 +170,49 @@ class ChessBoard extends Component {
 
 
     render(){
+        var initialString = this.state.white ? this.whiteInitial : this.blackInitial;
+        var initialClass = this.state.no_move_made ? "direction" : "hide";
+        var tick = this.state.finished_game ? "tick" : "hide";
         return (
-                <Row>
-                    <div className="col-6">
-                        <ChessDiagram draggable={{enabled : false}} fen={this.state.fen} onMove={this.onMove} />
+                    <div>
+                    <Row className= "board container" sm={{size:6}}>
+                        <ChessDiagram  
+                            resizable={true} 
+                            draggable={{enabled : false}} 
+                            fen={this.state.fen} 
+                            onMove={this.onMove}
+                            orientation={this.state.white ? 'white' : 'black'} 
+                            viewOnly={this.state.viewOnly}/>
+                    </Row>
+                    <Container>
+                        <Row className={this.props.user ? "buttons-container block" : "hide" }  >
+                            <div className={initialClass}>
+                                    {initialString}
+                            </div>
+                            <div className={tick}>
+                                <img src={tickIcon } alt="Well Done!"/>
+                            </div>
+                        </Row>
+                        <Row>
+                            <Button  className="info-button" onClick={()=>this.setNexPuzzle()}>Next Puzzle</Button>
+                        </Row>
+                        <Row className="fenRow">
+                            <Col className="puzzle-button">
+                                    <Button className="info-button "
+                                            onClick={()=>this.setState({showFen:true})}>Display Puzzle Fen</Button>
+                            </Col>
+                            <Col className={this.state.showFen ? 'fen' : 'hide'} style={{fontSize: '12px'}}>
+                                {this.props.user ? this.props.user.currentPuzzle.fen : ''};
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Button className="info-button" tag={Link} to={(this.props.user && 
+                            this.props.user.currentPuzzle) ? 'https://lichess.org/editor/'
+                            + this.props.user.currentPuzzle.fen : '/' } target="_blank">Open In Lichess</Button>
+                        </Row>
+                    </Container>
                     </div>
-                    <div className="col-6">
-                        <div clasName="button-container">
-                            <Button width="200" className="info-button">Next Puzzle</Button>
-                        </div>
-                        <div clasName="button-container">
-                            <Button className="info-button">Display Puzzle Fen</Button>
-                        </div>
-                        <div clasName="button-container">
-                            <Button className="info-button">Open In Lichess</Button>
-                        </div>
-                    </div>
-                </Row>
+                
         );
     };
 
@@ -110,7 +222,6 @@ class ChessBoard extends Component {
 
 function mapStateToChessBoardProps(state){
     return {
-        puzzle : state.currentPuzzle,
         user : state.user,
         puzzles: state.puzzles,
     }
@@ -119,22 +230,31 @@ function mapStateToChessBoardProps(state){
 
 function mapDispatchToAppProps(dispatch){
     return {
-        solved_puzzle : (id) => {
-            console.log('id is solved');
-            dispatch({
-                type : SOLVED_PUZZLE,
-                id : id,
-            })
-        },
-        setPuzzle: (id,fen,solutions) => {
+        setPuzzle: (userid, puzzleid,fen,solutions) => {
+            axios.post('/api/current_puzzle', {
+                userid,
+                puzzleid,
+                fen : fen,
+                solutions :solutions
+            });
             dispatch({
                 type : SET_CURRENT_PUZZLE,
-                id : id,
+                id : puzzleid,
                 fen : fen,
                 solutions : solutions
             });
         },
-        
+        solved_puzzle : (userid, puzzleid) => {
+            axios.post('/api/solved', {
+                userid,
+                puzzleid,
+            });
+            dispatch({
+                type : SOLVED_PUZZLE,
+                id : puzzleid,
+            })
+        },
+    
     }
 
 }
