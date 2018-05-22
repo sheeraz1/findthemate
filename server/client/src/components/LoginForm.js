@@ -34,8 +34,6 @@ import {Col} from 'reactstrap';
         }).then(
             (response) => {
                 if (response.status === 200 && response.data.user){
-                    console.log('successful response');
-                    console.log(response);
                     this.props.setUser(response.data.user);
                     this.setState({
                         isloggedIn : true,
@@ -64,7 +62,7 @@ import {Col} from 'reactstrap';
      
       <Col sm={{size:6, offset:3}}>
         <div className="formdiv">
-            <Form className="login-form">
+            <Form>
                 <FormGroup>
                 <Label className="form-label" for="exampleEmail">Email</Label>
                 <Input onChange = {this.onEmailChange} type="email" name="email" id="exampleEmail" placeholder="Enter a valid email" ref="email" />

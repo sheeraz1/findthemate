@@ -4,18 +4,27 @@ import axios from 'axios';
 import {connect} from 'react-redux';
 import {FETCH_USER} from '../actions/types';
 import {Redirect} from 'react-router';
+import {Col} from 'reactstrap';
+var validator = require('email-validator');
 
 class RegisterForm extends React.Component {
     state={
         email: '',
-        password: '',
+        password1: '',
+        password2: '',
         isloggedIn: false,
         error : '',
     }
 
-    onPasswordChange = (e) => {
+    onPassword1Change = (e) => {
         this.setState({
-            password : e.target.value
+            password1 : e.target.value
+        })
+    }
+
+    onPassword2Change = (e) => {
+        this.setState({
+            password2 : e.target.value
         })
     }
 
@@ -26,6 +35,18 @@ class RegisterForm extends React.Component {
     }
 
     formSubmit = () =>{
+        if (validator.validate(this.state.email) !== true){
+            this.setState({
+                error: 'Invalid email address!'
+            });
+            return;
+        }
+        if (this.state.password1 !== this.state.password2 ){
+            this.setState({
+                error: 'Passwords do not match'
+            })
+            return;
+        }
         axios.post( "/api/register", {
           email: this.state.email,
           password: this.state.password,
@@ -52,21 +73,26 @@ class RegisterForm extends React.Component {
 
   render() {
     return( this.state.isloggedIn ? <Redirect to="/"/> :
-      <Form>
+    <Col sm={{size:6, offset:3}}>
+      <Form className="formdiv">
         <FormGroup>
-          <Label for="exampleEmail">Email</Label>
+          <Label className="form-label" for="exampleEmail">Email</Label>
           <Input onChange = {this.onEmailChange} type="email" name="email" id="exampleEmail" placeholder="with a placeholder" />
         </FormGroup>
         <FormGroup>
-          <Label for="examplePassword">Password</Label>
-          <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword1" placeholder="Please Enter a Password" />
+          <Label className="form-label" for="examplePassword">Password</Label>
+          <Input onChange = {this.onPassword1Change} type="password" name="password1" id="examplePassword1" placeholder="Please Enter a Password" />
         </FormGroup>
         <FormGroup>
-          <Label for="examplePassword">Password</Label>
-          <Input type="password" name="password" id="examplePassword2" placeholder="Please Repeat The Password" />
+          <Label className="form-label" for="examplePassword">Password</Label>
+          <Input onChange = {this.onPassword2Change} type="password" name="password2" id="examplePassword2" placeholder="Please Repeat The Password" />
+        </FormGroup>
+        <FormGroup>
+          <Label className={this.state.error? "form-error": "hide"}>{this.state.error}</Label>
         </FormGroup>
         <Button onClick={this.formSubmit}>Submit</Button>
       </Form>
+    </Col>
     );
   }
 }
