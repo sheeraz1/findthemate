@@ -34,21 +34,27 @@ import {Col} from 'reactstrap';
         }).then(
             (response) => {
                 if (response.status === 200 && response.data.user){
+                    console.log('successful response');
+                    console.log(response);
                     this.props.setUser(response.data.user);
                     this.setState({
                         isloggedIn : true,
                         error: '',
                         user : '',
                         email : '',
-                    })
+                    });
                 }
                 else{
                     this.setState({
-                        error : 'error logging in',
-                        isloggedIn : false,
+                        error: response.data.message
                     })
                 }
-
+            }
+        )
+        .catch( (err) =>{
+                this.setState({
+                    error: 'Server error'
+                })
             }
         )
     }
@@ -66,6 +72,7 @@ import {Col} from 'reactstrap';
                 <FormGroup>
                 <Label className="form-label" for="examplePassword">Password</Label>
                 <Input onChange = {this.onPasswordChange} type="password" name="password" id="examplePassword" placeholder="Enter password" ref="password" />
+                <Label className="form-error">{this.state.error}</Label>
                 </FormGroup>
                 <Button className="form-button"onClick = {this.formSubmit} block >Submit</Button>
                 <div className="regis-text">New User ? Register here:</div>

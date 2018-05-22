@@ -6,13 +6,11 @@ const keys = require('../config/keys');
 const User = mongoose.model('users');
 
 passport.serializeUser((user, done) => {
-    console.log("serializing user");
 	done(null, user._id);
 });
 
 passport.deserializeUser((id, done) =>{
 	User.findById(id, function(err, user) {
-        console.log('deserializing user');
         done(err, user);
     });
 });
@@ -26,20 +24,22 @@ passport.use('local-login', new LocalStrategy({
 function(req, email, password, done) {
     if (email)
         email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
-    console.log('trying to find user');
     // asynchronous
     process.nextTick(function() {
         User.findOne({ email :  email }, function(err, user) {
             // if there are any errors, return the error
-            if (err)
+            if (err){
                 return done(err);
+            }
+
 
             // if no user is found, return the message
-            if (!user)
-                return done(null, null);
+            if (!user){
+                return done(null, false, {message: 'Email not registered'});
+            }
 
             if (user.password != password)
-                return done(null, null);
+                return done(null, false, {message: 'Incorrect password'});
 
             // all is well, return user
             return done(null, user);
@@ -63,7 +63,6 @@ function(req, email, password, done) {
     // asynchronous
     process.nextTick(function() {
         // if the user is not already logged in:
-        console.log('we are inside authenticate');
         if (!req.user) {
             User.findOne({ 'email' :  email }, function(err, user) {
                 // if there are any errors, return the error
@@ -76,7 +75,6 @@ function(req, email, password, done) {
                 } else {
 
                     // create the user
-                    console.log('did not find user with email ' + email);
                     var newUser = new User();
 
                     newUser.email    = email;
@@ -95,12 +93,9 @@ function(req, email, password, done) {
                        
                     }
                     newUser.currentPuzzle = defaultPuzzle;
-                    console.log('added puzzle');
                     newUser.save(function(err) {
                         if (err)
-            
                             return done(err);
-                        console.log('no error in authenticate');
                         return done(null, newUser);
                     });
                 }
@@ -109,9 +104,6 @@ function(req, email, password, done) {
         // if the user is logged in but has no local account...
         
     } 
-    else {
-        console.log('already signed in');
-    }
 
     });
 
