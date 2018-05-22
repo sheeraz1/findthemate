@@ -11,6 +11,7 @@ module.exports = (app) => {
 		return passport.authenticate('local-login', (err, user) => {
 			if (err) {
 			  if (err.name === 'IncorrectCredentialsError') {
+					console.log('incorrect credentials');
 				return res.status(400).json({
 				  success: false,
 				  message: err.message
@@ -23,15 +24,25 @@ module.exports = (app) => {
 			  });
 			}
 		
-			req.login(user, function(err) {
-				if (err) { return next(err); }
-			});
+			if (user){
+				req.login(user, function(err) {
+					if (err) { return next(err); }
+				});
 
-			return res.json({
-			  success: true,
-			  message: 'You have successfully logged in!',
-			  user: user
-			});
+				return res.json({
+					success: true,
+					message: 'You have successfully logged in!',
+					user: user
+				});
+			}
+
+			else{
+				return res.status(400).json({
+					success: false,
+					message: 'Error Loggin In'
+					});
+			}
+
 		  })(req, res, next);
 		}
 	);
