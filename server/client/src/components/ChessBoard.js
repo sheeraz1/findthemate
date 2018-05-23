@@ -22,35 +22,25 @@ var Chess = require('chess.js');
 
 class ChessBoard extends Component {
     constructor(props){
-        console.log('constructor called');
         super(props);
         this.whiteInitial = "White To Move";
         this.blackInitial = "Black To Move";
         var width = window.innerWidth;
         var height = window.innerHeight;
         var minWidthHeight = (width < height) ? width : height;
-        var boardDim = window.innerHeight < window.innerWidth ? window.innerHeight * 0.7 : window.innerWidth * 0.7;
-        
-        this.setState({
-            boardDim : (minWidthHeight * .7),
-        });
+       
 
         this.chess = new Chess();
         this.solutionsTree = new GameTree();
         var whiteMove = true;
         if(props.user){
-            console.log('In constructor: we have a user');
             var currentPuzzle = props.user.currentPuzzle;
 
             if(props.puzzles){
-                console.log('In constructor: we have puzzles');
-                console.log('current puzzle:');
-                console.log(currentPuzzle);
                 for(var i=0; i<props.puzzles.length; i++){
                     var puzzle = props.puzzles[i];
                     if (puzzle._id === currentPuzzle.id){
                         this.currentPuzzleIndex = i;
-                        console.log('we set currentpuzzle index to ' + this.currentPuzzleIndex);
                         break;
                     }
                 }
@@ -81,7 +71,6 @@ class ChessBoard extends Component {
     }
 
     componentWillReceiveProps(props){
-        console.log('will receive props called');
         if (props.user){
             if (props.user.currentPuzzle){
                 
@@ -165,11 +154,7 @@ class ChessBoard extends Component {
             this.currentPuzzleIndex=this.currentPuzzleIndex+1;
 
         var puzzle = this.props.puzzles[this.currentPuzzleIndex];
-        console.log('current puzzle index : ' + this.currentPuzzleIndex);
-        console.log('puzzles:');
-        console.log(this.props.puzzles);
         var id=this.props.user._id;
-        console.log(this.props.user);
         this.props.setPuzzle(id,puzzle._id,puzzle.fen, puzzle.solutions)
         this.setState({
             finished_game : false,
@@ -217,9 +202,9 @@ class ChessBoard extends Component {
                             </div>
                         </Row>
                         <Row>
-                            <Button  className="info-button" onClick={()=>this.setNexPuzzle()}>Next Puzzle</Button>
+                            <Button  className={this.props.user ? "info-button" : "hide"} onClick={()=>this.setNexPuzzle()}>Next Puzzle</Button>
                         </Row>
-                        <Row className="fenRow">
+                        <Row className={this.props.user ? "fenRow" : "hide"}>
                             <Col className="puzzle-button">
                                     <Button className="info-button "
                                             onClick={()=>this.setState({showFen:true})}>Display Puzzle Fen</Button>
@@ -229,7 +214,7 @@ class ChessBoard extends Component {
                             </Col>
                         </Row>
                         <Row>
-                            <Button className="info-button" tag={Link} to={(this.props.user && 
+                            <Button className={this.props.user ? "info-button" : "hide"} tag={Link} to={(this.props.user && 
                             this.props.user.currentPuzzle) ? 'https://lichess.org/editor/'
                             + this.props.user.currentPuzzle.fen : '/' } target="_blank">Open In Lichess</Button>
                         </Row>
@@ -245,7 +230,7 @@ class ChessBoard extends Component {
 
 function mapStateToChessBoardProps(state){
     return {
-        user : state.user,
+        user : state.user ? state.user : null,
         puzzles: state.puzzles,
     }
 }
