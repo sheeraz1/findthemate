@@ -22,6 +22,7 @@ var Chess = require('chess.js');
 
 class ChessBoard extends Component {
     constructor(props){
+        console.log('constructor called');
         super(props);
         this.whiteInitial = "White To Move";
         this.blackInitial = "Black To Move";
@@ -38,11 +39,18 @@ class ChessBoard extends Component {
         this.solutionsTree = new GameTree();
         var whiteMove = true;
         if(props.user){
+            console.log('In constructor: we have a user');
             var currentPuzzle = props.user.currentPuzzle;
+
             if(props.puzzles){
+                console.log('In constructor: we have puzzles');
+                console.log('current puzzle:');
+                console.log(currentPuzzle);
                 for(var i=0; i<props.puzzles.length; i++){
-                    if ((props.puzzles[i])._id === currentPuzzle.id){
+                    var puzzle = props.puzzles[i];
+                    if (puzzle._id === currentPuzzle.id){
                         this.currentPuzzleIndex = i;
+                        console.log('we set currentpuzzle index to ' + this.currentPuzzleIndex);
                         break;
                     }
                 }
@@ -64,6 +72,7 @@ class ChessBoard extends Component {
             viewOnly:false,
             currentPuzzle: currentPuzzle,
             showFen: false,
+            lastMove:[]
         }
         
         this.onMove = this.onMove.bind(this);
@@ -72,6 +81,7 @@ class ChessBoard extends Component {
     }
 
     componentWillReceiveProps(props){
+        console.log('will receive props called');
         if (props.user){
             if (props.user.currentPuzzle){
                 
@@ -109,14 +119,16 @@ class ChessBoard extends Component {
             this.chess.move({ from, to, promotion: 'q' });
             this.setState({
                 fen: this.chess.fen(),
-                no_move_made:false
+                no_move_made:false,
+                lastMove:[from,to]
             });
             if (!this.chess.in_checkmate())
                 setTimeout(this.makeComputerMove,300);
             else{
                 this.setState({
                     finished_game:true,
-                    viewOnly:true
+                    viewOnly:true,
+                    lastMove:[]
 
                 })
                 if (this.props.user.solved.indexOf(this.props.user.currentPuzzle.id) < 0)
@@ -153,8 +165,18 @@ class ChessBoard extends Component {
             this.currentPuzzleIndex=this.currentPuzzleIndex+1;
 
         var puzzle = this.props.puzzles[this.currentPuzzleIndex];
+        console.log('current puzzle index : ' + this.currentPuzzleIndex);
+        console.log('puzzles:');
+        console.log(this.props.puzzles);
         var id=this.props.user._id;
+        console.log(this.props.user);
         this.props.setPuzzle(id,puzzle._id,puzzle.fen, puzzle.solutions)
+        this.setState({
+            finished_game : false,
+            fen : puzzle.fen,
+            viewOnly: false,
+            lastMove:[]
+        })
     }
     makeComputerMove(){
         const move = this.solutionsTree.currentNode.children[0].move;
@@ -177,12 +199,13 @@ class ChessBoard extends Component {
                     <div>
                     <Row className= "board container" sm={{size:6}}>
                         <ChessDiagram  
-                            resizable={true} 
                             draggable={{enabled : false}} 
                             fen={this.state.fen} 
                             onMove={this.onMove}
                             orientation={this.state.white ? 'white' : 'black'} 
-                            viewOnly={this.state.viewOnly}/>
+                            viewOnly={this.state.viewOnly}
+                            lastMove = {this.state.lastMove}
+                            />
                     </Row>
                     <Container>
                         <Row className={this.props.user ? "buttons-container block" : "hide" }  >
